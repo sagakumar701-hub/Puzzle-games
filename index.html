@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desi Bike Rider</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111;font-family:Arial;color:#fff;text-align:center}
+#top{padding:8px;display:flex;justify-content:space-between;background:#1a1a1a}
+#top b{color:#ffcc00}
+button{padding:10px 14px;border:0;border-radius:10px;font-weight:bold}
+#startBtn{background:#ffcc00;font-size:18px}
+#shareBtn{background:#25D366;color:#fff}
+canvas{background:#2d5a2d;display:block;margin:0 auto;max-width:100%;height:72vh;border:3px solid #ffcc00}
+#controls{margin-top:8px;display:flex;justify-content:center;gap:15px}
+#controls button{font-size:28px;width:70px;height:60px;background:#333;color:#fff}
+#msg{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.9);padding:20px;border-radius:15px;display:none}
+#petrolBar{height:10px;background:red;width:100%}
+</style>
+</head>
+<body>
+<div id="top"><div>🏍️ <b>DESI BIKE RIDER</b><br><small>Level: <span id="level">1</span>/100 | Score: <span id="score">0</span> | 🪙 <span id="coins">0</span></small><div id="petrolBar"></div></div><button id="shareBtn" onclick="shareGame()">Share 📲</button></div>
+<canvas id="game" width="420" height="600"></canvas>
+<div id="controls"><button onclick="move(-1)">◀️</button><button id="startBtn" onclick="startGame()">▶️ START</button><button onclick="move(1)">▶️</button></div>
+<div id="msg"><h2 id="msgTitle">BOOYAH!</h2><p id="msgText"></p><button onclick="startGame()" style="background:#ffcc00;margin-top:10px">FIR SE KHELO</button></div>
+<script>
+let c=document.getElementById('game'),ctx=c.getContext('2d');
+let bikeX=190,speed=5,score=0,level=1,playing=false,roadY=0,petrol=100,coinCount=0;
+let traffic=[],coins=[],petrols=[];
+function move(d){bikeX+=d*45;if(bikeX<40)bikeX=40;if(bikeX>340)bikeX=340;}
+c.addEventListener('touchmove',e=>{let r=c.getBoundingClientRect();bikeX=e.touches[0].clientX-r.left-25;});
+function spawn(){if(Math.random()<0.03){let x=[60,170,280][Math.floor(Math.random()*3)];traffic.push({x:x,y:-100,type:['car','truck','auto'][Math.floor(Math.random()*3)]});}if(Math.random()<0.02){coins.push({x:60+Math.random()*280,y:-50});}if(Math.random()<0.005){petrols.push({x:60+Math.random()*280,y:-50});}}
+function drawBike(){ctx.fillStyle='#111';ctx.fillRect(bikeX+10,480,22,45);ctx.fillStyle='#ff5722';ctx.fillRect(bikeX+2,380,38,40);ctx.fillStyle='#222';ctx.fillRect(bikeX+5,415,32,20);ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(bikeX+21,365,18,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e91e63';ctx.fillRect(bikeX+5,425,32,20);ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.fillText('DESI',bikeX+6,440);}
+function drawTraffic(t){ctx.fillStyle=t.type=='truck'?'#fff':t.type=='auto'?'#ffeb3b':'#03a9f4';ctx.fillRect(t.x,t.y,50,t.type=='truck'?90:60);ctx.fillStyle='#111';ctx.fillRect(t.x-4,t.y+10,8,15);ctx.fillRect(t.x+46,t.y+10,8,15);ctx.fillStyle='#fff';ctx.font='bold 10px Arial';ctx.fillText(t.type.toUpperCase(),t.x+5,t.y+45);}
+function startGame(){playing=true;score=0;level=1;traffic=[];coins=[];petrols=[];bikeX=190;speed=5;petrol=100;coinCount=0;document.getElementById('msg').style.display='none';document.getElementById('startBtn').innerText='CHAL RAHA HAI...';requestAnimationFrame(loop);}
+function gameOver(txt){playing=false;document.getElementById('msgTitle').innerText='💥 GAME OVER!';document.getElementById('msgText').innerText=txt+' Score: '+score+' | Coins: '+coinCount;document.getElementById('msg').style.display='block';document.getElementById('startBtn').innerText='▶️ START';}
+function loop(){if(!playing)return;roadY+=speed;if(roadY>40)roadY=0;petrol-=0.03;document.getElementById('petrolBar').style.width=petrol+'%';if(petrol<=0){gameOver('⛽ Petrol Khatam!');return;}ctx.fillStyle='#2d7a2d';ctx.fillRect(0,0,420,600);ctx.fillStyle='#333';ctx.fillRect(40,0,340,600);ctx.fillStyle='#fff';for(let y=-40+roadY;y<600;y+=80){ctx.fillRect(135,y,6,40);ctx.fillRect(275,y,6,40);}ctx.fillStyle='#ffcc00';ctx.fillRect(40,0,4,600);ctx.fillRect(376,0,4,600);spawn();for(let i=traffic.length-1;i>=0;i--){let t=traffic[i];t.y+=speed-1;drawTraffic(t);if(t.y>380&&t.y<500&&Math.abs(t.x-bikeX)<45){gameOver('Crash Ho Gaya!');return;}if(t.y>620)traffic.splice(i,1);}for(let i=coins.length-1;i>=0;i--){let co=coins[i];co.y+=speed;ctx.font='28px Arial';ctx.fillText('🪙',co.x,co.y);if(co.y>380&&co.y<500&&Math.abs(co.x-bikeX)<40){score+=50;coinCount++;coins.splice(i,1);}if(co.y>620)coins.splice(i,1);}for(let i=petrols.length-1;i>=0;i--){let p=petrols[i];p.y+=speed;ctx.font='28px Arial';ctx.fillText('⛽',p.x,p.y);if(p.y>380&&p.y<500&&Math.abs(p.x-bikeX)<40){petrol=100;petrols.splice(i,1);}if(p.y>620)petrols.splice(i,1);}drawBike();score+=1;if(score%500==0){level++;speed+=0.7;}document.getElementById('score').innerText=score;document.getElementById('level').innerText=level;document.getElementById('coins').innerText=coinCount;requestAnimationFrame(loop);}
+function shareGame(){let url=window.location.href;window.open('https://wa.me/?text='+encodeURIComponent('🏍️ Mera Desi Bike Rider Game Khelo! '+url),'_blank');}
+ctx.fillStyle='#2d7a2d';ctx.fillRect(0,0,420,600);ctx.fillStyle='#333';ctx.fillRect(40,0,340,600);drawBike();
+</script>
+</body>
+</html>
